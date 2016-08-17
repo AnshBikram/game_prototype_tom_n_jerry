@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+<style>
+body{background:rgba(41,41,41,1);cursor:default;}
+#div1{position:absolute;height:50px;width:50px;background: url('Files/tom1.png') 103px 0px;background-size:200px;float:left;}
+#div2{position:absolute;height:50px;top:200px;width:50px;background:url('Files/spike1.png') -35px -10px ;background-size:110px;borde:1px solid black;}
+#screen{position:relative;cursor:none;height:500px;width:1100px;overflow:hidden;background:url('Files/bg1.jpg');background-size:90%;padding:10px;}
+#time{position:absolute;top:10px;right:10px;padding:10px;padding-top:0px;padding-bottom:0px;background:rgba(21,21,21,1);font-size:30px;color:white;}
+#logout{position:relative;width:100px;cursor:pointer;top:600px;right:10px;padding:10px;padding-top:0px;padding-bottom:0px;background:rgba(21,21,21,1);font-size:30px;color:white;}
+.point{position:absolute;height:50px;width:50px;background:url('Files/jerry1.gif');background-size:60px;}
+#start{position:relative;height:400px;width:400px;background:rgba(31,31,31,1);cursor:auto;}
+#play{position:relative;cursor:pointer;background:hsla(20,50%,50%,1);color:white;padding:20px;width:100px;top:50px;}
+#score{position:relative;cursor:pointer;background:hsla(20,50%,50%,1);color:white;padding:20px;width:100px;top:70px;}
+#help{position:relative;cursor:pointer;background:hsla(20,50%,50%,1);color:white;padding:20px;width:100px;top:90px;}
+#exit{position:relative;cursor:pointer;background:hsla(20,50%,50%,1);color:white;padding:20px;width:100px;top:110px;}
+#play:hover{box-shadow:inset 0px 0px 2px white;}
+#score:hover{box-shadow:inset 0px 0px 2px white;}
+#help:hover{box-shadow:inset 0px 0px 2px white;}
+#exit:hover{box-shadow:inset 0px 0px 2px white;}
+#bonus{ccolor:white;font-size:30px;}
+#hScore{position:relative;color:white;font-size:40px;width:700px;cursor:default;padding:30px;padding-right:40px;top:-400px;text-align:left;height:440px;background:rgba(31,31,31,1);overflow-y:auto;}
+#hc{position:relative;color:white;font-size:40px;width:700px;cursor:default;padding:30px;padding-right:40px;top:-400px;text-align:left;height:440px;background:rgba(31,31,31,1);overflow-y:auto;}
+.close{position:absolute;height:50px;width:50px;top:0px;right:0px;cursor:pointer;}
+
+</style>
+
+<script type="text/javascript" src="Files/jquery.js"></script>
+<script>
+
+
+
+$(document).ready(function getScore(){
+  $.ajax({
+  type:"GET",
+  url:"text.txt",
+  success:function(result){//using jquery
+   // allText = result; 
+	lines = result.split("\n");
+	insertScore(lines);
+  }
+ // error:function(error){alert(error);}
+  });
+});
+
+function postScore(name,score)
+{
+    $.ajax({
+  //  url: "insertScore.jsp",
+    type: "POST",
+    async: true,
+    data:  {"name": name , "score" : score},
+    success: function(data){//alert(data);
+           getScore();
+        }
+    });
+}
+postScore('a','b');
+
+/*$( document ).ready(function getScore()//using javascript
+{
+	var txtFile = new XMLHttpRequest(); 
+	txtFile.open("GET", "text.txt", true); 
+	txtFile.onreadystatechange = function() { 
+	if (txtFile.readyState === 4 && txtFile.status === 200) { 
+	allText = txtFile.responseText; 
+	lines = txtFile.responseText.split("\n");
+	insertScore(lines);
+	} 
+	} 
+	txtFile.send(null); 
+
+});*/
+
+
+
+
+
+
+function insertScore(text)
+{
+	$( '#hScore').append('<table>');
+	$( '#hScore').append('<tr><td align="center" width="180px"><u><i>Rank<i></u></td><td width="300px" align="center"><u>Name</u></td><td width="200px" align="center"><u>Score</u></td></tr>');
+	
+
+	for(i=0;i<(text.length<=20)?text.length:20;i++)
+	{
+		x=text[i].split(' ');
+		y=x[0];
+		z=x[x.length-1];
+		$( '#hScore').append('<tr><td align="center">'+(i+1)+'</td><td align="center">'+y+'</td><td align="center">'+z+'</td></tr>');
+
+	}
+	$( '#hScore').append('</table>');
+	$( 'table').css( {position:'relative',width:'80%' } );
+	//$( 'td').css( {padding:'5px',width:'100px' ,background:'red'} );
+
+}
+
+
+$(document).ready(function(){
+//alert();
+	//$('#time').hide();
+	//$('#screen').hide();
+	//$('body').css('cursor', 'none');
+	var div1=$("#div1");
+    var div1Size={height:div1.height(),width:div1.width()};
+    var div2= $("#div2");
+    var div2Size={height:div2.height(),width:div2.width()};
+	var scr=$('#screen');
+	var scrSize={height:scr.height(),width:scr.width()};
+	var pnt=$('#point');
+	var pntSize={height:pnt.height(),width:pnt.width()};
+	var y=1;
+	var result=0;
+	var sound = new Audio("Files/audio1.ogg");
+
+	$('#play').click(function()
+	{//alert();
+		$( '#time' ).text('Your Score : 0');
+		var timer=setInterval(function(){$( '#time' ).text('Your score : '+y);y++;},1000);
+		y=1;
+		$('#time').show();
+		$('#screen').show();
+		$('#start').hide();
+		
+		function rand(x,y)
+		{
+			return Math.floor(x+Math.random()*(y-x));
+		}
+		
+		function collision(pos1,size1,pos2,size2)
+		{
+			//alert();
+			if((pos1.left+size1.width>pos2.left)&&(pos2.left+size2.width>pos1.left)&&(pos1.top+size1.height>pos2.top)&&(pos2.top+size2.height>pos1.top)||((scr.position().left-120)>pos1.left||scr.position().top>(pos1.top-50)||(scr.position().left+scrSize.width)<(pos1.left+size1.width+105)||(pos1.top+size1.height)>(scr.position().top+scrSize.height+10)))
+			{
+
+					clearTimeout(timer);
+					clearTimeout(pt);
+					$('#div2').stop();
+					result=y;
+					sound.play();
+					//$('#time').hide();
+					//$('#screen').hide();
+					result--;
+					$('#div2').css({top:'100px',left:'50px'});
+					alert("Game Over!!!\nScore : "+result);
+					$('#start').show();
+					$('#point').css({opacity:0});
+					$('#bonus').css({opacity:0});
+			}
+			
+		}
+		
+		function motion()
+		{
+			$( '#div2' ).animate( {top:rand(5,95)+'%' ,left:rand(5,95)+'%'},{duration:rand(300,1000),step:function(){collision(div1.position(),div1Size,div2.position(),div2Size);/*collision(div1.position(),div1Size,scr.position(),scrSize)*/},complete:motion});
+			
+		}
+		motion();
+		
+		
+		
+		function points()
+		{	//alert(y);
+			//$('#screen').append('<div id="point'+y+'" class="point"/>');
+			//$('#screen').append('<div id="point" class="point"></div>');
+		
+			var x=$('#point');
+			x.css( { left:rand(50,750)+'px',top:rand(50,450)+'px',opacity:0 } );
+			x.animate( {opacity:1 },500 );
+			//alert('#point'+y);
+		
+		}
+		
+		$( "#point" ).click(function()
+		{//alert();
+			var t=$( "#point" );
+			y=y+10;
+			var x=$('#point').position().top;
+			var z=$('#point').position().left;
+			$('#point').animate({backgroundSize:'90px'},300);
+			$('#point').animate({backgroundSize:'60px'},0);
+			sound.play();
+			$('#bonus').animate({top:x,left:z,opacity:1 },0).animate({top:x-40,left:z,opacity:0},500);
+			
+		});
+
+		var pt=setInterval(function(){points();},2000);
+	
+	});
+
+	$(document).bind('mousemove', function(e){
+    $('#div1').css({left:e.pageX-150,top:e.pageY-30 });
+	});
+	
+	$('#close1').click(function(){
+		//alert();
+		$('#hc').hide();
+	
+	});
+	
+	$(document).ready(function()
+	{
+		$('#hc').hide();
+	
+	});
+	
+	$('#help').click(function()
+	{
+		$('#hc').show();
+	
+	});
+	
+	$('#exit').click(function(){ 
+			window.close();
+	});
+});
+	
+function logout()
+{
+
+window.location='Logout.php';
+
+}
+
+</script>
+</head>
+<body onload="x()">
+
+<div id="time" style="z-index:100;">Your Score : 0</div>
+<center><div id="logout" style="z-index:100;" onclick="logout()">Logout</div></center>
+<center>
+		<div id="screen">
+			<div id="div1"></div>
+			<div id="div2"></div>
+			<div id="point" class="point" style="opacity:0;"></div>
+			
+			<p id="bonus" style="position:absolute;opacity:0;">+10</p>
+			<div id="start">
+		
+				<div id="play">Play Game</div>
+				<div id="score" onclick="document.getElementById('hScore').style.display='block';">Highscores</div>
+				<div id="help">Help</div>
+				<div id="exit">Exit</div>
+		
+			</div>
+			<center>
+			<div id="hScore" style="display:none;">
+			
+				<img id="close" class="close" src="Files/tom1.jpg" onclick="javascript:document.getElementById('hScore').style.display='none';" />
+			</div></center>
+			<div id="hc">
+				You have to move the mouse pointer(tom cat) so as to avoid the randomly moving
+				obstacle(spike dog) and the screen border. If you hit them then the 
+				game will be over.
+					
+					The score is the time in seconds, till you haven't lost your turn.
+				For bonus points you can collect the points(jeryy mouse) that will pop up at random 
+				locations.
+				
+					Move your mouse to move our characcter and use mouse click to collect
+				the bonus points
+				<img id="close1" class="close" src="Files/tom1.jpg" />
+			</div>
+		</div>
+	
+
+	</center>
+</body>
+</html>
